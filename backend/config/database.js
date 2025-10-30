@@ -1,6 +1,6 @@
 const mysql = require('mysql2');
 
-// Clever Cloud provides MYSQL_ADDON_* environment variables
+// Clever Cloud provides these environment variables
 const dbConfig = {
   host: process.env.MYSQL_ADDON_HOST,
   user: process.env.MYSQL_ADDON_USER,
@@ -12,23 +12,17 @@ const dbConfig = {
   queueLimit: 0
 };
 
-console.log('Clever Cloud MySQL Config:', {
-  host: dbConfig.host,
-  user: dbConfig.user,
-  database: dbConfig.database,
-  port: dbConfig.port
-});
-
 const pool = mysql.createPool(dbConfig);
 const promisePool = pool.promise();
 
+// Test connection
 pool.getConnection((err, connection) => {
   if (err) {
-    console.log('❌ MySQL Connection Failed:', err.message);
+    console.log('Database connection pending...');
   } else {
     console.log('✅ Connected to Clever Cloud MySQL');
     
-    // This will create the table automatically
+    // Create table
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS Attendance (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,9 +36,9 @@ pool.getConnection((err, connection) => {
     
     connection.query(createTableQuery, (err) => {
       if (err) {
-        console.error('❌ Error creating table:', err.message);
+        console.error('Error creating table:', err.message);
       } else {
-        console.log('✅ Attendance table ready on Clever Cloud');
+        console.log('✅ Attendance table ready');
       }
       connection.release();
     });
