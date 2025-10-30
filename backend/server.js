@@ -6,16 +6,20 @@ require('dotenv').config();
 const attendanceRoutes = require('./routes/attendance');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080; // Clever Cloud uses 8080
 
-// Middleware - Allow all origins for development
+// Middleware - Allow all origins
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Test route
 app.get('/test', (req, res) => {
-  res.json({ message: 'Backend is working!' });
+  res.json({ 
+    message: 'Backend is working!',
+    environment: process.env.NODE_ENV,
+    database: 'Clever Cloud MySQL'
+  });
 });
 
 // Routes
@@ -27,15 +31,20 @@ app.get('/', (req, res) => {
     message: 'Employee Attendance Tracker API',
     version: '1.0.0',
     status: 'Running',
-    database: 'MySQL'
+    environment: process.env.NODE_ENV || 'production',
+    database: 'Clever Cloud MySQL',
+    deployed: true
   });
 });
 
-// Health check
+// Health check for Clever Cloud
 app.get('/health', (req, res) => {
   res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString()
+    status: 'OK',
+    service: 'Attendance Tracker API',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    provider: 'Clever Cloud'
   });
 });
 
@@ -44,7 +53,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
   res.status(500).json({ 
     error: 'Something went wrong!',
-    message: err.message
+    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
   });
 });
 
@@ -52,7 +61,13 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
-    availableRoutes: ['GET /', 'GET /health', 'GET /test', 'POST /api/attendance', 'GET /api/attendance']
+    availableRoutes: [
+      'GET /', 
+      'GET /health', 
+      'GET /test', 
+      'POST /api/attendance', 
+      'GET /api/attendance'
+    ]
   });
 });
 
@@ -61,9 +76,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 Employee Attendance Tracker API');
   console.log('=================================');
   console.log(`📍 Server running on port ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Local: http://localhost:${PORT}`);
-  console.log(`💡 Note: MySQL connection will work on Railway`);
-  console.log(`💡 Local: Using mock data if MySQL not available`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'production'}`);
+  console.log(`🏢 Provider: Clever Cloud`);
+  console.log(`🗄️  Database: MySQL`);
+  console.log(`📅 Started: ${new Date().toLocaleString()}`);
   console.log('=================================');
 });

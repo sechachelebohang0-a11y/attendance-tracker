@@ -1,48 +1,34 @@
 const mysql = require('mysql2');
 
-// For Railway MySQL - it provides these environment variables automatically
-// For local development without MySQL, we'll handle the error gracefully
+// Clever Cloud provides MYSQL_ADDON_* environment variables
 const dbConfig = {
-  host: process.env.MYSQLHOST || 'localhost',
-  user: process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD || '',
-  database: process.env.MYSQLDATABASE || 'attendance_tracker',
-  port: process.env.MYSQLPORT || 3306,
+  host: process.env.MYSQL_ADDON_HOST,
+  user: process.env.MYSQL_ADDON_USER,
+  password: process.env.MYSQL_ADDON_PASSWORD,
+  database: process.env.MYSQL_ADDON_DB,
+  port: process.env.MYSQL_ADDON_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000,
-  reconnect: true
+  queueLimit: 0
 };
 
-console.log('Database Config:', {
+console.log('Clever Cloud MySQL Config:', {
   host: dbConfig.host,
   user: dbConfig.user,
   database: dbConfig.database,
-  port: dbConfig.port,
-  hasPassword: !!dbConfig.password
+  port: dbConfig.port
 });
 
-// Create connection pool
 const pool = mysql.createPool(dbConfig);
-
-// Create a promise wrapper
 const promisePool = pool.promise();
 
-// Test connection - but don't crash if it fails
 pool.getConnection((err, connection) => {
   if (err) {
-    console.log('⚠️  MySQL Connection Note:', err.message);
-    console.log('💡 This is normal if:');
-    console.log('   - MySQL is not installed locally');
-    console.log('   - Using different MySQL credentials');
-    console.log('   - Deploying to Railway (they provide MySQL automatically)');
-    console.log('🚀 The app will still start and work on Railway with their MySQL');
+    console.log('❌ MySQL Connection Failed:', err.message);
   } else {
-    console.log('✅ Connected to MySQL database');
+    console.log('✅ Connected to Clever Cloud MySQL');
     
-    // Create table if it doesn't exist
+    // This will create the table automatically
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS Attendance (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,7 +44,7 @@ pool.getConnection((err, connection) => {
       if (err) {
         console.error('❌ Error creating table:', err.message);
       } else {
-        console.log('✅ Attendance table ready');
+        console.log('✅ Attendance table ready on Clever Cloud');
       }
       connection.release();
     });
