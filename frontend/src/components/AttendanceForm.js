@@ -11,20 +11,62 @@ const AttendanceForm = ({ onAttendanceAdded }) => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    
+    // Special validation for employeeName field
+    if (name === 'employeeName') {
+      // Allow only letters and spaces
+      const lettersOnly = value.replace(/[^a-zA-Z\s]/g, '');
+      setFormData({
+        ...formData,
+        [name]: lettersOnly
+      });
+      
+      // Clear error when user starts typing
+      if (errors.employeeName) {
+        setErrors({
+          ...errors,
+          employeeName: ''
+        });
+      }
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Employee Name validation
+    if (!formData.employeeName.trim()) {
+      newErrors.employeeName = 'Employee name is required';
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.employeeName)) {
+      newErrors.employeeName = 'Employee name should contain only letters';
+    } else if (formData.employeeName.trim().length < 2) {
+      newErrors.employeeName = 'Employee name should be at least 2 characters';
+    }
+    
+    // Employee ID validation
+    if (!formData.employeeID.trim()) {
+      newErrors.employeeID = 'Employee ID is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.employeeName.trim() || !formData.employeeID.trim()) {
-      setMessage('Please fill in all required fields');
+    // Validate form
+    if (!validateForm()) {
+      setMessage('Please fix the errors in the form');
       return;
     }
 
@@ -33,7 +75,10 @@ const AttendanceForm = ({ onAttendanceAdded }) => {
 
     try {
       console.log('Submitting to:', `${API_BASE_URL}/api/attendance`);
-      const response = await axios.post(`${API_BASE_URL}/api/attendance`, formData);
+      const response = await axios.post(`${API_BASE_URL}/api/attendance`, {
+        ...formData,
+        employeeName: formData.employeeName.trim() // Trim whitespace before sending
+      });
       setMessage('Attendance recorded successfully!');
       
       // Reset form
@@ -43,6 +88,9 @@ const AttendanceForm = ({ onAttendanceAdded }) => {
         date: new Date().toISOString().split('T')[0],
         status: 'Present'
       });
+
+      // Clear errors
+      setErrors({});
 
       // Notify parent to refresh dashboard
       if (onAttendanceAdded) {
@@ -82,8 +130,12 @@ const AttendanceForm = ({ onAttendanceAdded }) => {
             value={formData.employeeName}
             onChange={handleChange}
             required
-            placeholder="Enter employee name"
+            placeholder="Enter employee name (letters only)"
+            className={errors.employeeName ? 'error' : ''}
           />
+          {errors.employeeName && (
+            <div className="field-error">{errors.employeeName}</div>
+          )}
         </div>
 
         <div className="form-group">
@@ -96,7 +148,11 @@ const AttendanceForm = ({ onAttendanceAdded }) => {
             onChange={handleChange}
             required
             placeholder="Enter employee ID"
+            className={errors.employeeID ? 'error' : ''}
           />
+          {errors.employeeID && (
+            <div className="field-error">{errors.employeeID}</div>
+          )}
         </div>
 
         <div className="form-group">
