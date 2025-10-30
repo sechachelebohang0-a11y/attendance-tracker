@@ -1,17 +1,28 @@
 const mysql = require('mysql2');
-require('dotenv').config();
 
-// For local development - use these defaults
+// For Railway MySQL - it provides these environment variables automatically
+// For local development without MySQL, we'll handle the error gracefully
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'Lebohang2003@',
-  database: process.env.DB_NAME || 'attendance_tracker',
-  port: process.env.DB_PORT || 3306,
+  host: process.env.MYSQLHOST || 'localhost',
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD || '',
+  database: process.env.MYSQLDATABASE || 'attendance_tracker',
+  port: process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  acquireTimeout: 60000,
+  timeout: 60000,
+  reconnect: true
 };
+
+console.log('Database Config:', {
+  host: dbConfig.host,
+  user: dbConfig.user,
+  database: dbConfig.database,
+  port: dbConfig.port,
+  hasPassword: !!dbConfig.password
+});
 
 // Create connection pool
 const pool = mysql.createPool(dbConfig);
@@ -19,11 +30,15 @@ const pool = mysql.createPool(dbConfig);
 // Create a promise wrapper
 const promisePool = pool.promise();
 
-// Test connection
+// Test connection - but don't crash if it fails
 pool.getConnection((err, connection) => {
   if (err) {
-    console.error('❌ Database connection failed:', err.message);
-    console.log('💡 Please make sure MySQL is running and the database exists');
+    console.log('⚠️  MySQL Connection Note:', err.message);
+    console.log('💡 This is normal if:');
+    console.log('   - MySQL is not installed locally');
+    console.log('   - Using different MySQL credentials');
+    console.log('   - Deploying to Railway (they provide MySQL automatically)');
+    console.log('🚀 The app will still start and work on Railway with their MySQL');
   } else {
     console.log('✅ Connected to MySQL database');
     

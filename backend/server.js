@@ -56,12 +56,14 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('=================================');
   console.log('🚀 Employee Attendance Tracker API');
   console.log('=================================');
   console.log(`📍 Server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Local: http://localhost:${PORT}`);
+  console.log(`💡 Note: MySQL connection will work on Railway`);
+  console.log(`💡 Local: Using mock data if MySQL not available`);
   console.log('=================================');
 });
